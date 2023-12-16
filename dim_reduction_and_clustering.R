@@ -24,6 +24,13 @@ library(RcppML)
 library(kohonen)
 library(psych)
 library(Rtsne)
+library(argparse)
+
+# Argument parsing
+parser <- ArgumentParser()
+parser$add_argument("--base_data_path", help = "Path to the input scRNA data", default = "C:/Users/malki/OneDrive/SFU Materials/Course Work/Fall 2023/CPSC 545/Lectures/cpsc545-project/data")
+parser$add_argument("--output_path", help = "Path to the output folder", default = "C:/Users/malki/OneDrive/SFU Materials/Course Work/Fall 2023/CPSC 545/Lectures/cpsc545-project/results")
+args <- parser$parse_args()
 
 
 # This function is used to preprocess the data
@@ -241,12 +248,11 @@ assign_dr_output <- function(method) {
 
 
 
-
-
 ########################################################################## Execution ##########################################################################
 
-base_data_path = "C:/Users/malki/OneDrive/SFU Materials/Course Work/Fall 2023/CPSC 545/Lectures/cpsc545-project/data"
-output_path = "C:/Users/malki/OneDrive/SFU Materials/Course Work/Fall 2023/CPSC 545/Lectures/cpsc545-project/results"
+# Accessing the parsed arguments
+base_data_path <- args$base_data_path
+output_path <- args$output_path
 files = list("Brain_Tumor_3p_LT_filtered_feature_bc_matrix", "Breast_Cancer_3p_LT_filtered_feature_bc_matrix", "Targeted_NGSC3_DI_HodgkinsLymphoma_Pan_Cancer_filtered_feature_bc_matrix")
 methods = list("tSNE","UMAP","PCA","ICA", "IPCA", "NMF", "Diffusion Map", "MDS","AutoEncoder")
 
@@ -259,7 +265,10 @@ for (file in files) {
   df_normalized = preprocess_df(df)
   
   # Get the singleR cell annotation
-  ref <- celldex::BlueprintEncodeData()
+  if (file == "Targeted_NGSC3_DI_HodgkinsLymphoma_Pan_Cancer_filtered_feature_bc_matrix") {
+    ref <- celldex::BlueprintEncodeData()
+  } else { ref <- celldex::HumanPrimaryCellAtlasData()
+  }
   pred <- SingleR(test = df_normalized, ref = ref, labels = ref$label.main)
   singleR_labels = pred$labels
   # Import the 10xGenomics cluster labels
